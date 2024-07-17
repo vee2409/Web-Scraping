@@ -1,85 +1,521 @@
-!pip install requests beautifulsoup4 pandas
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-url = "https://hprera.nic.in/PublicDashboard"
-response = requests.get(url, verify=False)
-soup = BeautifulSoup(response.content, 'html.parser')
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "110d26fc",
+   "metadata": {},
+   "source": [
+    "#  Importing Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "eae41a1c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import requests\n",
+    "from bs4 import BeautifulSoup\n",
+    "from selenium import webdriver"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "fd193f59",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Title of the HTML page: HPRERA : Public Dashboard\n"
+     ]
+    }
+   ],
+   "source": [
+    "url = 'https://hprera.nic.in/PublicDashboard'\n",
+    "response = requests.get(url)\n",
+    "\n",
+    "try:\n",
+    "    response.raise_for_status()\n",
+    "\n",
+    "    # Check if the content type is HTML\n",
+    "    if 'text/html' in response.headers.get('content-type', ''):\n",
+    "        soup = BeautifulSoup(response.content, 'html.parser')\n",
+    "\n",
+    "        # Extract information from the HTML using BeautifulSoup\n",
+    "        # For example, you can print the title of the HTML page\n",
+    "        title = soup.title.text\n",
+    "        print(f'Title of the HTML page: {title}')\n",
+    "    else:\n",
+    "        print(f'The response content is not in HTML format. Content type: {response.headers.get(\"content-type\")}')\n",
+    "\n",
+    "except requests.exceptions.HTTPError as err:\n",
+    "    print(f'HTTP Error: {err}')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "bd4eb629",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Website is designed and developed by NIC Himachal Pradesh. Contents on this website are published and managed by RERA, HP.  The content on site is informative and neither the RERA nor the NIC is responsible for any in-advertent errors.\n",
+      "We are thankful to Omidyar Network & Praxis Global Alliance for providing support during the development of HP RERA Website.\n",
+      "\r\n",
+      "                        This website can be best viewed in\r\n",
+      "                        \n",
+      "Google Chrome 35 (or above)\n",
+      "Opera 40 (or above)\n",
+      "Firefox 33 (or above)\n",
+      "Edge 85 (or above)\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "\n",
+      "Real Estate Regulatory Authority, Annexe Building, Majitha House Near HP Secretariat, Chotta Shimla, Shimla, HP, 171002\r\n",
+      "                        \n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "response = requests.get(url)\n",
+    "\n",
+    "try:\n",
+    "    response.raise_for_status()\n",
+    "\n",
+    "    # Check if the content type is HTML\n",
+    "    if 'text/html' in response.headers.get('content-type', ''):\n",
+    "        soup = BeautifulSoup(response.content, 'html.parser')\n",
+    "\n",
+    "        # Example: Extracting all the text from paragraph tags (change as per your needs)\n",
+    "        paragraphs = soup.find_all('p')\n",
+    "\n",
+    "        for paragraph in paragraphs:\n",
+    "            print(paragraph.text)\n",
+    "\n",
+    "    else:\n",
+    "        print(f'The response content is not in HTML format. Content type: {response.headers.get(\"content-type\")}')\n",
+    "\n",
+    "except requests.exceptions.HTTPError as err:\n",
+    "    print(f'HTTP Error: {err}')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "9b025085",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Projects Container: <div class=\"tab-pane fade show active\" id=\"tab_project_main\">\n",
+      "<div class=\"row\"><div class=\"col-12\" id=\"content-tab_project_main\"></div></div>\n",
+      "</div>\n",
+      "Project Links: []\n"
+     ]
+    }
+   ],
+   "source": [
+    "response = requests.get(url)\n",
+    "\n",
+    "try:\n",
+    "    response.raise_for_status()\n",
+    "\n",
+    "    # Check if the content type is HTML\n",
+    "    if 'text/html' in response.headers.get('content-type', ''):\n",
+    "        soup = BeautifulSoup(response.content, 'html.parser')\n",
+    "\n",
+    "        # Find the container that may contain project links using the class name\n",
+    "        projects_container = soup.find('div', {'class': 'tab-pane fade show active'})\n",
+    "\n",
+    "        if projects_container:\n",
+    "            print(f'Projects Container: {projects_container}')\n",
+    "\n",
+    "            # Find the links to the detail pages of the first 5 projects\n",
+    "            project_links = projects_container.find_all('a', {'class': 'form-now'})[:5]\n",
+    "            print(f'Project Links: {project_links}')\n",
+    "\n",
+    "            for link in project_links:\n",
+    "                project_url = link['href']\n",
+    "\n",
+    "                # Visit the detail page\n",
+    "                project_response = requests.get(project_url)\n",
+    "                project_soup = BeautifulSoup(project_response.content, 'html.parser')\n",
+    "\n",
+    "                # Extract required fields (example: GSTIN No, PAN No, Name, Permanent Address)\n",
+    "                gstin_no = project_soup.find('span', {'id': 'gstin'}).text\n",
+    "                pan_no = project_soup.find('span', {'id': 'pan'}).text\n",
+    "                name = project_soup.find('span', {'id': 'name'}).text\n",
+    "                permanent_address = project_soup.find('span', {'id': 'permanentAddress'}).text\n",
+    "\n",
+    "                # Print or store the extracted information\n",
+    "                print(f'GSTIN No: {gstin_no}')\n",
+    "                print(f'PAN No: {pan_no}')\n",
+    "                print(f'Name: {name}')\n",
+    "                print(f'Permanent Address: {permanent_address}')\n",
+    "                print('\\n')\n",
+    "        else:\n",
+    "            print('Could not find the container for projects on the page. Check the class name.')\n",
+    "\n",
+    "    else:\n",
+    "        print(f'The response content is not in HTML format. Content type: {response.headers.get(\"content-type\")}')\n",
+    "\n",
+    "except requests.exceptions.HTTPError as err:\n",
+    "    print(f'HTTP Error: {err}')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "113bf112",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# If the website uses dynamic content loading with JavaScript, BeautifulSoup may not capture the dynamically loaded content.\n",
+    "#In such cases, consider using a tool like Selenium to interact with the dynamically loaded content."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "115fb475",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#If you need to display a large amount of data, you can increase the data rate limit in Jupyter Notebook. \n",
+    "#To do this, you can run the following command in a notebook cell:\n",
+    "\n",
+    "%config NotebookApp.iopub_data_rate_limit=100000000\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "a1cfdb07",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Projects Container: <div class=\"tab-pane fade show active\" id=\"tab_project_main\">\n",
+      "<div class=\"row\"><div class=\"col-12\" id=\"content-tab_project_main\">\n",
+      "<div class=\"row animated fadeIn\">\n",
+      "<div class=\"col-lg-3 mb-2\">\n",
+      "<form class=\"font-sm\" id=\"form-tab_project_main-filter\" novalidate=\"novalidate\">\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2 bg-light py-2 px-3 radius-3\">\n",
+      "<label class=\"fw-600\">District</label>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[0].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-18\" name=\"DistrictList[0].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[0].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-18\">Bilaspur</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_0__Value\" name=\"DistrictList[0].Value\" type=\"hidden\" value=\"18\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[1].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-24\" name=\"DistrictList[1].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[1].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-24\">Chamba</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_1__Value\" name=\"DistrictList[1].Value\" type=\"hidden\" value=\"24\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[2].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-20\" name=\"DistrictList[2].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[2].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-20\">Hamirpur</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_2__Value\" name=\"DistrictList[2].Value\" type=\"hidden\" value=\"20\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[3].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-23\" name=\"DistrictList[3].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[3].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-23\">Kangra</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_3__Value\" name=\"DistrictList[3].Value\" type=\"hidden\" value=\"23\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[4].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-25\" name=\"DistrictList[4].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[4].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-25\">Kinnaur</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_4__Value\" name=\"DistrictList[4].Value\" type=\"hidden\" value=\"25\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[5].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-22\" name=\"DistrictList[5].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[5].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-22\">Kullu</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_5__Value\" name=\"DistrictList[5].Value\" type=\"hidden\" value=\"22\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[6].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-26\" name=\"DistrictList[6].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[6].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-26\">Lahaul Spiti</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_6__Value\" name=\"DistrictList[6].Value\" type=\"hidden\" value=\"26\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[7].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-21\" name=\"DistrictList[7].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[7].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-21\">Mandi</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_7__Value\" name=\"DistrictList[7].Value\" type=\"hidden\" value=\"21\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[8].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-15\" name=\"DistrictList[8].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[8].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-15\">Shimla</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_8__Value\" name=\"DistrictList[8].Value\" type=\"hidden\" value=\"15\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[9].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-17\" name=\"DistrictList[9].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[9].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-17\">Sirmaur</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_9__Value\" name=\"DistrictList[9].Value\" type=\"hidden\" value=\"17\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[10].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-16\" name=\"DistrictList[10].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[10].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-16\">Solan</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_10__Value\" name=\"DistrictList[10].Value\" type=\"hidden\" value=\"16\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"DistrictList[11].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-district-19\" name=\"DistrictList[11].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"DistrictList[11].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-district-19\">Una</label>\n",
+      "</div>\n",
+      "<input id=\"DistrictList_11__Value\" name=\"DistrictList[11].Value\" type=\"hidden\" value=\"19\"/>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2 bg-light py-2 px-3 radius-3\">\n",
+      "<label class=\"fw-600\">Project Type</label>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"PlottedTypeList[0].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-type-P\" name=\"PlottedTypeList[0].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"PlottedTypeList[0].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-type-P\">Plotted</label>\n",
+      "</div>\n",
+      "<input id=\"PlottedTypeList_0__Value\" name=\"PlottedTypeList[0].Value\" type=\"hidden\" value=\"P\"/>\n",
+      "</div>\n",
+      "<div class=\"col-12\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"PlottedTypeList[1].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-type-F\" name=\"PlottedTypeList[1].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"PlottedTypeList[1].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-type-F\">Development/Construction</label>\n",
+      "</div>\n",
+      "<input id=\"PlottedTypeList_1__Value\" name=\"PlottedTypeList[1].Value\" type=\"hidden\" value=\"F\"/>\n",
+      "</div>\n",
+      "<div class=\"col-12\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"PlottedTypeList[2].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-type-M\" name=\"PlottedTypeList[2].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"PlottedTypeList[2].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-type-M\">Plotted + Development/Construction</label>\n",
+      "</div>\n",
+      "<input id=\"PlottedTypeList_2__Value\" name=\"PlottedTypeList[2].Value\" type=\"hidden\" value=\"M\"/>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2 bg-light py-2 px-3 radius-3\">\n",
+      "<label class=\"fw-600\">Project Category</label>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-6 col-md-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"ResidentialTypeList[0].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-status-R\" name=\"ResidentialTypeList[0].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"ResidentialTypeList[0].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-status-R\">Residential</label>\n",
+      "</div>\n",
+      "<input id=\"ResidentialTypeList_0__Value\" name=\"ResidentialTypeList[0].Value\" type=\"hidden\" value=\"R\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6 col-md-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"ResidentialTypeList[1].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-status-C\" name=\"ResidentialTypeList[1].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"ResidentialTypeList[1].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-status-C\">Commercial</label>\n",
+      "</div>\n",
+      "<input id=\"ResidentialTypeList_1__Value\" name=\"ResidentialTypeList[1].Value\" type=\"hidden\" value=\"C\"/>\n",
+      "</div>\n",
+      "<div class=\"col-6 col-md-6\">\n",
+      "<div class=\"custom-control custom-checkbox\">\n",
+      "<input aria-describedby=\"ResidentialTypeList[2].Selected-error\" class=\"custom-control-input valid\" data-val=\"true\" data-val-required=\"The Selected field is required.\" id=\"chk-project-status-M\" name=\"ResidentialTypeList[2].Selected\" type=\"checkbox\" value=\"true\"/><input name=\"ResidentialTypeList[2].Selected\" type=\"hidden\" value=\"false\"/>\n",
+      "<label class=\"custom-control-label\" for=\"chk-project-status-M\">Residential &amp; Commercial</label>\n",
+      "</div>\n",
+      "<input id=\"ResidentialTypeList_2__Value\" name=\"ResidentialTypeList[2].Value\" type=\"hidden\" value=\"M\"/>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2 bg-light py-2 px-3 radius-3\">\n",
+      "<label class=\"fw-600\">Project Area</label>\n",
+      "<div class=\"input-group mb-1\">\n",
+      "<span class=\"input-group-prepend\"><span class=\"input-group-text px-2 py-1 font-vxs fw-600\">sq m</span></span>\n",
+      "<input aria-describedby=\"txt-AreaFrom-error\" class=\"form-control form-control-sm valid\" data-val=\"true\" data-val-range=\"Invalid value!\" data-val-range-max=\"999999\" data-val-range-min=\"1\" data-val-regex=\"Only decimal numbers upto 2 places are allowed!\" data-val-regex-pattern=\"^[0-9]{0,15}(\\.[0-9]{1,2})?$\" id=\"txt-AreaFrom\" maxlength=\"9\" name=\"AreaFrom\" placeholder=\"From\" type=\"text\" value=\"\"/>\n",
+      "<input aria-describedby=\"txt-AreaUpto-error\" class=\"form-control form-control-sm valid\" data-val=\"true\" data-val-range=\"Invalid value!\" data-val-range-max=\"999999\" data-val-range-min=\"1\" data-val-regex=\"Only decimal numbers upto 2 places are allowed!\" data-val-regex-pattern=\"^[0-9]{0,15}(\\.[0-9]{1,2})?$\" id=\"txt-AreaUpto\" maxlength=\"9\" name=\"AreaUpto\" placeholder=\"Upto\" type=\"text\" value=\"\"/>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2 bg-light py-2 px-3 radius-3\">\n",
+      "<label class=\"fw-600\">Search Text (if any)</label>\n",
+      "<input aria-describedby=\"SearchText-error\" class=\"form-control form-control-sm valid\" data-val=\"true\" data-val-length=\"Min. 3, max. 50 characters are allowed!\" data-val-length-max=\"50\" data-val-length-min=\"3\" id=\"SearchText\" maxlength=\"50\" name=\"SearchText\" placeholder=\"Search Text (Min. 3 chars.)\" type=\"text\" value=\"\"/>\n",
+      "<div class=\"font-vxs mt-2 text-brown lh-1\">Available for Project Name / Registration Number / Promoter Name only</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div class=\"form-row\">\n",
+      "<div class=\"col-12 mb-2\">\n",
+      "<a class=\"btn btn-block btn-primary btn-sm\" href=\"javascript:void(0);\" id=\"btn-search-tab_project_main\" onclick=\"tab_project_main_BindProjectGrid($(this))\"><i class=\"fa fa-binoculars mr-1\"></i>Search</a>\n",
+      "</div>\n",
+      "</div>\n",
+      "</form>\n",
+      "</div>\n",
+      "<div class=\"col-lg-9\">\n",
+      "<div id=\"tab_project_main-filtered-data\"><div class=\"my-3 py-4 text-center text-muted\"><div class=\"spinner-border\" role=\"status\"></div><br/>Fetching data ...<span class=\"sr-only\">Loading</span></div></div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<div aria-hidden=\"true\" class=\"modal\" data-backdrop=\"static\" data-keyboard=\"false\" id=\"modal-data-display-tab_project_main\" role=\"dialog\" tabindex=\"-1\">\n",
+      "<div class=\"modal-dialog modal-xl\" role=\"document\">\n",
+      "<div class=\"modal-content\">\n",
+      "<div class=\"modal-header\">\n",
+      "<h5 class=\"modal-title\" id=\"modal-data-display-tab_project_main-title\"><i class=\"fa fa-eye mr-2\"></i></h5>\n",
+      "<button aria-label=\"Close\" class=\"close\" data-dismiss=\"modal\" type=\"button\"><span aria-hidden=\"true\">×</span></button>\n",
+      "</div>\n",
+      "<div class=\"modal-body py-0\" id=\"modal-data-display-tab_project_main-content\"></div>\n",
+      "<div class=\"modal-footer py-3\">\n",
+      "<button class=\"btn btn-sm btn-secondary\" data-dismiss=\"modal\" type=\"button\">Close</button>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "</div>\n",
+      "<script>\n",
+      "    var LoadHtml = '<div class=\"my-3 py-4 text-center text-muted\"><div class=\"spinner-border\" role=\"status\"></div><br>Fetching data ...<span class=\"sr-only\">Loading</span></div>';\n",
+      "    var FailHtml = \"<div class='mb-2 texture-1 p-3 font-xs text-danger text-center opacity-8'><i class='fa fa-2x fa-exclamation-triangle'></i><br/> Failed to Load Data. Try reloading the page or Login again to continue (Perhaps your session has expired!). If problem persists, Please contact your Adminsitrator.</div>\";\n",
+      "\n",
+      "    function tab_project_main_BindProjectGrid(element) {\n",
+      "        var form = element.closest('form');\n",
+      "        if (form.valid()) {\n",
+      "            $(\"#tab_project_main-filtered-data\").html(LoadHtml);\n",
+      "            $.ajax({\n",
+      "                url: '/PublicDashboard/GetFilteredProjectsPV', type: 'GET', dataType: 'HTML', data: form.serialize(),\n",
+      "                success: function (data) { window.setTimeout(function () { $(\"#tab_project_main-filtered-data\").html(data); }, 200); }, error: function (data) { $(\"#tab_project_main-filtered-data\").html(FailHtml); }\n",
+      "            });\n",
+      "        }\n",
+      "    }\n",
+      "</script>\n",
+      "<script>\n",
+      "    $(function () {\n",
+      "        $.validator.unobtrusive.parse(\"#form-tab_project_main-filter\");\n",
+      "        tab_project_main_BindProjectGrid($(\"#btn-search-tab_project_main\"));\n",
+      "    });\n",
+      "</script>\n",
+      "</div></div>\n",
+      "</div>\n",
+      "Project Links: []\n"
+     ]
+    }
+   ],
+   "source": [
+    "import time\n",
+    "from selenium import webdriver\n",
+    "from bs4 import BeautifulSoup\n",
+    "\n",
+    "url = 'https://hprera.nic.in/PublicDashboard'\n",
+    "\n",
+    "# Use a web driver (e.g., ChromeDriver) from https://sites.google.com/chromium.org/driver/\n",
+    "driver = webdriver.Chrome()\n",
+    "driver.get(url)\n",
+    "\n",
+    "# Allow time for dynamic content to load (you may need to adjust the sleep duration)\n",
+    "time.sleep(5)\n",
+    "\n",
+    "try:\n",
+    "    # Get the page source after dynamic content has loaded\n",
+    "    page_source = driver.page_source\n",
+    "\n",
+    "    # Use BeautifulSoup to parse the dynamically loaded content\n",
+    "    soup = BeautifulSoup(page_source, 'html.parser')\n",
+    "\n",
+    "    # Find the container that may contain project links using the class name\n",
+    "    projects_container = soup.find('div', {'class': 'tab-pane fade show active'})\n",
+    "\n",
+    "    if projects_container:\n",
+    "        print(f'Projects Container: {projects_container}')\n",
+    "\n",
+    "        # Find the links to the detail pages of the first 5 projects\n",
+    "        project_links = projects_container.find_all('a', {'class': 'form-now'})[:5]\n",
+    "        print(f'Project Links: {project_links}')\n",
+    "\n",
+    "        for link in project_links:\n",
+    "            project_url = link['href']\n",
+    "\n",
+    "            # Visit the detail page\n",
+    "            project_response = requests.get(project_url)\n",
+    "            project_soup = BeautifulSoup(project_response.content, 'html.parser')\n",
+    "\n",
+    "            # Extract required fields (example: GSTIN No, PAN No, Name, Permanent Address)\n",
+    "            gstin_no = project_soup.find('span', {'id': 'gstin'}).text\n",
+    "            pan_no = project_soup.find('span', {'id': 'pan'}).text\n",
+    "            name = project_soup.find('span', {'id': 'name'}).text\n",
+    "            permanent_address = project_soup.find('span', {'id': 'permanentAddress'}).text\n",
+    "\n",
+    "            # Print or store the extracted information\n",
+    "            print(f'GSTIN No: {gstin_no}')\n",
+    "            print(f'PAN No: {pan_no}')\n",
+    "            print(f'Name: {name}')\n",
+    "            print(f'Permanent Address: {permanent_address}')\n",
+    "            print('\\n')\n",
+    "    else:\n",
+    "        print('Could not find the container for projects on the page. Check the class name.')\n",
+    "\n",
+    "except requests.exceptions.HTTPError as err:\n",
+    "    print(f'HTTP Error: {err}')\n",
+    "\n",
+    "finally:\n",
+    "    # Close the Selenium WebDriver\n",
+    "    driver.quit()\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
 
-print(soup.prettify())
-project_links = []
-tables = soup.find_all('table')
-
-
-for table in tables:
-    if 'Registered Projects' in table.get_text():
-        rows = table.find_all('tr')[1:7]  # Skip the header row and take the first 6 projects
-        for row in rows:
-            link = row.find('a', href=True)
-            if link:
-                project_links.append("https://hprera.nic.in" + link['href'])
-        break
-
-print(project_links)
-!pip install requests beautifulsoup4 pandas
-
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-
-
-url = "https://hprera.nic.in/PublicDashboard"
-response = requests.get(url, verify=False)
-soup = BeautifulSoup(response.content, 'html.parser')
-
-
-print(soup.prettify())
-
-
-project_links = []
-tables = soup.find_all('table')
-
-
-for table in tables:
-    if 'Registered Projects' in table.get_text():
-        rows = table.find_all('tr')[1:7]  # Skip the header row and take the first 6 projects
-        for row in rows:
-            link = row.find('a', href=True)
-            if link:
-                project_links.append("https://hprera.nic.in" + link['href'])
-        break
-
-print(project_links)
-
-
-def get_project_details(url):
-    response = requests.get(url, verify=False)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    details = {}
-    try:
-        details_table = soup.find('table', class_='table')  # Adjust the class or find logic if necessary
-        rows = details_table.find_all('tr')
-
-        for row in rows:
-            columns = row.find_all('td')
-            if len(columns) == 2:
-                key = columns[0].get_text(strip=True)
-                value = columns[1].get_text(strip=True)
-                if key in ['GSTIN No', 'PAN No', 'Name', 'Permanent Address']:
-                    details[key] = value
-    except Exception as e:
-        print(f"Error parsing {url}: {e}")
-    
-    return details
-
-
-projects = []
-
-for link in project_links:
-    project_details = get_project_details(link)
-    projects.append(project_details)
-
-
-df = pd.DataFrame(projects)
-print(df)
